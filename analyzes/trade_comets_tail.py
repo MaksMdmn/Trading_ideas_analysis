@@ -1,7 +1,8 @@
-from core import csvfinance_reading as rd
+from core import csvfinance_io as rd
 from core import trading as trd
 import datetime
 import time
+import csv
 
 
 def main():
@@ -43,43 +44,83 @@ def main():
     print("start to make trades...", time.asctime())
     print()
 
-    for ticker in vol_reader.get_tickers_list():
-        trade_data = lookup_for_trading_data(price_reader.get_historical_data_dict()[ticker],
-                                             vol_reader.get_historical_data_dict()[ticker],
-                                             iv_entropy_value,
-                                             iv_calm_value,
-                                             iv_entropy_period_days,
-                                             iv_calm_period_days,
-                                             price_drop_enough_value)
+    with open(csv_file_path + 'result.csv', 'w', newline='') as result_file:
 
-        print()
-        print(ticker, 'number of trades:', len(trade_data))
+        result_writer = csv.writer(result_file, delimiter=';')
+        result_writer.writerow(['ticker', 'trade date', 'price', 'iv', 'strike', 'expiration', 'price_exp', 'iv_exp'])
 
-        temp_pnl = 0.0
-        for td in trade_data:
-            try:
-                dt = td[0]
-                prc = round(td[1], 2)
-                vol = round(td[2], 2)
-                strike = round(trd.rounding_to_strike_step(0.95 * prc), 2)
-                corrected_dt = datetime.date(dt.year if dt.month < 12 else dt.year + 1,
-                                             dt.month + 1 if dt.month < 12 else 1,
-                                             1)
-                expiration = trd.get_next_monthly_expiration(corrected_dt)
+        for ticker in vol_reader.get_tickers_list():
+            trade_data = lookup_for_trading_data(price_reader.get_historical_data_dict()[ticker],
+                                                 vol_reader.get_historical_data_dict()[ticker],
+                                                 iv_entropy_value,
+                                                 iv_calm_value,
+                                                 iv_entropy_period_days,
+                                                 iv_calm_period_days,
+                                                 price_drop_enough_value)
 
-                prc_end = price_reader.get_closest_value_by_date(ticker, expiration)
-                diff_prc = round(prc_end - prc, 2)
+            for td in trade_data:
+                try:
+                    dt = td[0]
+                    prc = round(td[1], 2)
+                    vol = round(td[2], 2)
+                    strike = round(trd.rounding_to_strike_step(0.95 * prc), 2)
+                    corrected_dt = datetime.date(dt.year if dt.month < 12 else dt.year + 1,
+                                                 dt.month + 1 if dt.month < 12 else 1,
+                                                 1)
+                    expiration = trd.get_next_monthly_expiration(corrected_dt)
 
-                temp_pnl += diff_prc
+                    prc_exp = price_reader.get_closest_value_by_date(ticker, expiration)
+                    vol_exp = vol_reader.get_closest_value_by_date(ticker, expiration)
 
-            except AttributeError:
-                print(ticker, 'cannot find following expiration date:', expiration)
-                continue
+                    result_writer.writerow([ticker,
+                                            dt,
+                                            str(prc).replace('.', ','),
+                                            str(vol).replace('.', ','),
+                                            str(strike).replace('.', ','),
+                                            expiration,
+                                            str(prc_exp).replace('.', ','),
+                                            str(vol_exp).replace('.', ',')])
+                except AttributeError:
+                    print(ticker, 'cannot find following expiration date:', expiration)
+                    continue
 
-            print("trade date:", dt,
-                  " | option:", strike, expiration, " | IV:", vol, " | o:", prc, "c", prc_end, "diff:", diff_prc)
-        print('approx. pnl:', round(temp_pnl, 2))
-        print()
+        #
+        # trade_data = lookup_for_trading_data(price_reader.get_historical_data_dict()[ticker],
+        #                                      vol_reader.get_historical_data_dict()[ticker],
+        #                                      iv_entropy_value,
+        #                                      iv_calm_value,
+        #                                      iv_entropy_period_days,
+        #                                      iv_calm_period_days,
+        #                                      price_drop_enough_value)
+        #
+        # print()
+        # print(ticker, 'number of trades:', len(trade_data))
+        #
+        # temp_pnl = 0.0
+        # for td in trade_data:
+        #     try:
+        #         dt = td[0]
+        #         prc = round(td[1], 2)
+        #         vol = round(td[2], 2)
+        #         strike = round(trd.rounding_to_strike_step(0.95 * prc), 2)
+        #         corrected_dt = datetime.date(dt.year if dt.month < 12 else dt.year + 1,
+        #                                      dt.month + 1 if dt.month < 12 else 1,
+        #                                      1)
+        #         expiration = trd.get_next_monthly_expiration(corrected_dt)
+        #
+        #         prc_end = price_reader.get_closest_value_by_date(ticker, expiration)
+        #         diff_prc = round(prc_end - prc, 2)
+        #
+        #         temp_pnl += diff_prc
+        #
+        #     except AttributeError:
+        #         print(ticker, 'cannot find following expiration date:', expiration)
+        #         continue
+        #
+        #     print("trade date:", dt,
+        #           " | option:", strike, expiration, " | IV:", vol, " | o:", prc, "c", prc_end, "diff:", diff_prc)
+        # print('approx. pnl:', round(temp_pnl, 2))
+        # print()
 
 
 def lookup_for_trading_data(price_quotes, iv_quotes, iv_entropy_value, iv_calm_value, iv_entropy_period,

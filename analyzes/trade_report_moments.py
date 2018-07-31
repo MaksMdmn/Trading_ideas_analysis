@@ -1,4 +1,4 @@
-from core import csvfinance_reading as rd, trading as trd
+from core import csvfinance_io as fio, trading as trd
 import time
 import datetime
 
@@ -13,8 +13,8 @@ def main():
     exit_signal_work_days_after = 3
     # NEED TO BE ENTERED BY USER
 
-    report_dates = sorted(rd.FinancialDataHelper.read_dates_from_file(csv_file_path + input_file_data_name))
-    data_reader = rd.OptionsDataReader(csv_file_path + csv_file_name, 4, 5, 9, 8, 12, 11, 7, True)
+    report_dates = sorted(fio.FinancialDataHelper.read_dates_from_file(csv_file_path + input_file_data_name))
+    data_reader = fio.OptionsDataReader(csv_file_path + csv_file_name, 4, 5, 9, 8, 12, 11, 7, True)
 
     print("work with following input dates:", *report_dates, sep='\n')
     print()
@@ -98,8 +98,6 @@ def main():
     print('P&L:', res)
     print()
     print("TIME SPENT:", (datetime.datetime.now() - start_point).seconds, 'sec.')
-
-
 
 
 main()
