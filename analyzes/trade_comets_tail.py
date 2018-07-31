@@ -47,7 +47,7 @@ def main():
     with open(csv_file_path + 'result.csv', 'w', newline='') as result_file:
 
         result_writer = csv.writer(result_file, delimiter=';')
-        result_writer.writerow(['ticker', 'trade date', 'price', 'iv', 'strike', 'expiration', 'price_exp', 'iv_exp'])
+        result_writer.writerow(['ticker', 'trade date', 'price', 'iv', 'option type', 'strike', 'expiration', 'price_exp', 'iv_exp'])
 
         for ticker in vol_reader.get_tickers_list():
             trade_data = lookup_for_trading_data(price_reader.get_historical_data_dict()[ticker],
@@ -76,6 +76,18 @@ def main():
                                             dt,
                                             str(prc).replace('.', ','),
                                             str(vol).replace('.', ','),
+                                            'PUT',
+                                            str(strike).replace('.', ','),
+                                            expiration,
+                                            str(prc_exp).replace('.', ','),
+                                            str(vol_exp).replace('.', ',')])
+
+                    strike = round(trd.rounding_to_strike_step(1.05 * prc), 2)
+                    result_writer.writerow([ticker,
+                                            dt,
+                                            str(prc).replace('.', ','),
+                                            str(vol).replace('.', ','),
+                                            'CALL',
                                             str(strike).replace('.', ','),
                                             expiration,
                                             str(prc_exp).replace('.', ','),
