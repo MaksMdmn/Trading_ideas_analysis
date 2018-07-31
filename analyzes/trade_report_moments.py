@@ -56,7 +56,7 @@ def main():
             continue
 
         spot_ref = data_reader.get_price_data_by_date(enter_date)
-        expiration = trd.get_nearest_friday(exit_date)
+        expiration = trd.get_next_weekly_expiration(exit_date)
         strike = trd.rounding_to_strike_step(spot_ref, trd.define_strike_step(spot_ref))
 
         if not enter_date in historical_data.keys():

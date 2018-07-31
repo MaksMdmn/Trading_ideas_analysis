@@ -209,13 +209,26 @@ class BidAskQuote:
 
 
 # useful methods
-def get_nearest_friday(date):
+def get_next_weekly_expiration(date):
     day_diff = 5 - date.isoweekday()
 
     if day_diff >= 0:
         return date + datetime.timedelta(day_diff)  # nearest this week friday
     else:
         return date + datetime.timedelta(math.fabs(7) - math.fabs(day_diff))  # next week friday
+
+
+def get_next_monthly_expiration(date):
+    expiration_friday_number = 3
+
+    expiration_friday = get_next_weekly_expiration(datetime.date(date.year, date.month, 1))
+    for _ in range(expiration_friday_number - 1):
+        expiration_friday = get_next_weekly_expiration(expiration_friday + datetime.timedelta(1))
+
+    if date > expiration_friday:
+        return get_next_monthly_expiration(datetime.date(date.year, date.month + 1, 1))
+
+    return expiration_friday
 
 
 def subtract_workdays_from_date(date, n):
@@ -247,7 +260,11 @@ def is_dayoff(date):
         return False
 
 
-def rounding_to_strike_step(price, round_to):
+def rounding_to_strike_step(price, round_to=None):
+
+    if round_to is None:
+        round_to = define_strike_step(price)
+
     main_part = round(price / round_to, 0) * round_to
     fraction_part = price - main_part
 

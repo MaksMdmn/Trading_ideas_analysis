@@ -44,6 +44,26 @@ class HistoricalDataReader:
     def get_historical_data_dict(self):
         return self.__historical_data
 
+    def get_value_by_date(self, ticker, date):
+        quote_list = self.__historical_data[ticker]
+
+        if date < quote_list[0].date or date > quote_list[len(quote_list - 1)]:
+            raise ArithmeticError("Date is out of range")
+
+        for q in quote_list:
+            if q.date == date:
+                return q.value
+
+    def get_closest_value_by_date(self, ticker, date):
+        quote_list = self.__historical_data[ticker]
+
+        if date < quote_list[0].date or date > quote_list[len(quote_list) - 1].date:
+            raise AttributeError("Date is out of range")
+
+        for q in quote_list:
+            if q.date >= date:
+                return q.value
+
 
 class OptionsDataReader:
 
