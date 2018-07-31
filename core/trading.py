@@ -121,6 +121,27 @@ class OptionDeal(Deal):
                                             self.exitprice, self.quantity, self.description,
                                             self.spotref_enter, self.spotref_exit)
 
+    @classmethod
+    def create_option_deal(cls, o_d_r_enter, o_d_r_exit, quantity_abs, deal_type):
+        if o_d_r_enter.generate_id() != o_d_r_exit.generate_id():
+            raise AttributeError("enter and exit o_d_r have different ID - wrong logic")
+
+        description = str(deal_type + o_d_r_enter.generate_id())
+
+        if deal_type == Deal.BUY_DEAL_TYPE:
+            enter_price = o_d_r_enter.ask
+            exit_price = o_d_r_exit.bid
+        elif deal_type == Deal.SELL_DEAL_TYPE:
+            enter_price = o_d_r_enter.bid
+            exit_price = o_d_r_exit.ask
+            quantity_abs = quantity_abs * -1
+        else:
+            print("wrong type of deal, have a look at class trading.Deal")
+            return None
+
+        return OptionDeal(o_d_r_enter.tradedate, o_d_r_exit.tradedate, enter_price, exit_price,
+                          quantity_abs, description, o_d_r_enter.spotref, o_d_r_exit.spotref)
+
 
 class Quote:
 

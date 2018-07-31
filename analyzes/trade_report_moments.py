@@ -72,8 +72,8 @@ def main():
         call_leg_exit = data_reader.get_option_by_args(exit_date, trd.OptionDeal.OPTION_CALL_TYPE, expiration, strike)
         put_leg_exit = data_reader.get_option_by_args(exit_date, trd.OptionDeal.OPTION_PUT_TYPE, expiration, strike)
 
-        deals.append(create_deal(call_leg_enter, call_leg_exit, 1, trd.Deal.SELL_DEAL_TYPE))
-        deals.append(create_deal(put_leg_enter, put_leg_exit, 1, trd.Deal.SELL_DEAL_TYPE))
+        deals.append(trd.OptionDeal.create_option_deal(call_leg_enter, call_leg_exit, 1, trd.Deal.SELL_DEAL_TYPE))
+        deals.append(trd.OptionDeal.create_option_deal(put_leg_enter, put_leg_exit, 1, trd.Deal.SELL_DEAL_TYPE))
 
     temp_counter = 0
     call_put_result = 0.0
@@ -100,25 +100,6 @@ def main():
     print("TIME SPENT:", (datetime.datetime.now() - start_point).seconds, 'sec.')
 
 
-def create_deal(o_d_r_enter, o_d_r_exit, quantity_abs, deal_type):
-    if o_d_r_enter.generate_id() != o_d_r_exit.generate_id():
-        raise AttributeError("enter and exit o_d_r have different ID - wrong logic")
-
-    description = str(deal_type + o_d_r_enter.generate_id())
-
-    if deal_type == trd.Deal.BUY_DEAL_TYPE:
-        enter_price = o_d_r_enter.ask
-        exit_price = o_d_r_exit.bid
-    elif deal_type == trd.Deal.SELL_DEAL_TYPE:
-        enter_price = o_d_r_enter.bid
-        exit_price = o_d_r_exit.ask
-        quantity_abs = quantity_abs * -1
-    else:
-        print("wrong type of deal, have a look at class trading.Deal")
-        return None
-
-    return trd.OptionDeal(o_d_r_enter.tradedate, o_d_r_exit.tradedate, enter_price, exit_price,
-                          quantity_abs, description, o_d_r_enter.spotref, o_d_r_exit.spotref)
 
 
 main()
